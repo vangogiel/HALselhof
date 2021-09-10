@@ -1,7 +1,7 @@
 package play.api.hal
 
 import play.api.hal.Hal._
-import play.api.libs.json.{ JsObject, JsValue, Json, Writes }
+import play.api.libs.json.{ JsObject, JsValue, Json, OWrites, Writes }
 
 object Hal {
 
@@ -70,13 +70,9 @@ object Hal {
   }
 }
 
-object HalBuilder {
-  def apply(): Hal = Hal()
-}
-
 case class Hal(
     links: Seq[HalRelation] = Seq.empty,
-    embedded: Option[HalResource] = None
+    customData: Option[HalResource] = None
 ) {
 
   /** Append HAL relation to the builder
@@ -94,10 +90,17 @@ case class Hal(
     */
   def withRelation(rel: String, hrefs: Seq[HalHref]): Hal = this.copy(links :+ HalMultipleRelation(rel, hrefs))
 
+  def withCustomData[A <: Object](data: A)(implicit writes: OWrites[A]): Hal = {
+    this.copy(customData = Option(data.asResource))
+  }
+
   /** Builder by delegating to another function
     * @return the combination built as HalResource
     */
-  def build(): HalResource = hal(JsObject(Nil), links.toVector)
+  def build(): HalResource = customData match {
+    case None       => hal(JsObject(Nil), links.toVector)
+    case Some(data) => data include hal(JsObject(Nil), links.toVector)
+  }
 
   /** Builder by delegating to another function
     * @return the combination built as JsValue
