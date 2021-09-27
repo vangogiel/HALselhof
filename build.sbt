@@ -14,8 +14,8 @@ import sbtrelease.ReleaseStateTransformations.{
 organization := "io.vangogiel"
 name := "halselhof"
 
-scalaVersion := "2.13.0"
-crossScalaVersions := Seq("2.11.8", "2.12.10")
+scalaVersion := "2.13.6"
+crossScalaVersions := Seq("2.12.10", "2.13.6")
 
 scalacOptions ++= Seq(
   "-unchecked",
@@ -36,7 +36,7 @@ libraryDependencies ++= Seq(
 
 commands ++= Seq(ciBuild, devBuild)
 
-coverageMinimum := 100
+coverageMinimumStmtTotal := 100
 coverageFailOnMinimum := true
 
 releaseVersionBump := sbtrelease.Version.Bump.Next
