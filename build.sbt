@@ -1,9 +1,18 @@
 import CiCommands.{ ciBuild, devBuild }
-import com.jsuereth.sbtpgp.PgpKeys.gpgCommand
+import sbtrelease.ReleaseStateTransformations.{
+  checkSnapshotDependencies,
+  commitNextVersion,
+  commitReleaseVersion,
+  inquireVersions,
+  publishArtifacts,
+  pushChanges,
+  setNextVersion,
+  setReleaseVersion,
+  tagRelease
+}
 
 organization := "io.vangogiel"
 name := "halselhof"
-version := "0.5"
 
 scalaVersion := "2.13.0"
 crossScalaVersions := Seq("2.11.8", "2.12.10")
@@ -29,6 +38,26 @@ commands ++= Seq(ciBuild, devBuild)
 
 coverageMinimum := 100
 coverageFailOnMinimum := true
+
+releaseVersionBump := sbtrelease.Version.Bump.Next
+releaseVersionFile := baseDirectory.value / "version.sbt"
+releasePublishArtifactsAction := PgpKeys.publishSigned.value
+
+publishConfiguration := publishConfiguration.value.withOverwrite(true)
+releaseIgnoreUntrackedFiles := true
+releaseCrossBuild := true
+
+releaseProcess := Seq[ReleaseStep](
+  checkSnapshotDependencies,
+  inquireVersions,
+  setReleaseVersion,
+  commitReleaseVersion,
+  tagRelease,
+  publishArtifacts,
+  setNextVersion,
+  commitNextVersion,
+  pushChanges
+)
 
 credentials += Credentials(
   "Sonatype Nexus Repository Manager",
