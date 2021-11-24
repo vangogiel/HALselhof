@@ -136,5 +136,45 @@ class HalBuilderSpec extends PlaySpec {
           "status": "shipped"
         }""".stripMargin)
     }
+
+    "build json with multiple links in a relation and custom data" in {
+      Hal()
+        .withRelation(
+          "self",
+          HalHref("/orders")
+        )
+        .withRelation(
+          "next",
+          HalHref("/orders?page=2")
+        )
+        .withRelation(
+          "find",
+          HalHref("/orders{?id}")
+            .withTemplated()
+        )
+        .withRelation(
+          "curies",
+          Seq(
+            HalHref("/order/1").withName("1").withTemplated(),
+            HalHref("/order/2").withName("2").withTemplated(),
+            HalHref("/order/3").withName("3").withTemplated()
+          )
+        )
+        .withCustomData(TestData(20, "EUR", "shipped"))
+        .buildJson() mustBe Json.parse("""{
+          "_links": {
+              "self": { "href": "/orders" },
+              "next": { "href": "/orders?page=2" },
+              "find": { "href": "/orders{?id}", "templated": true },
+              "curies" : [
+                  { "href": "/order/1", "name": "1", "templated": true},
+                  { "href": "/order/2", "name": "2", "templated": true},
+                  { "href": "/order/3", "name": "3", "templated": true}
+          ]},
+          "total" : 20,
+          "currency" : "EUR",
+          "status": "shipped"
+        }""".stripMargin)
+    }
   }
 }
