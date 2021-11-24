@@ -1,71 +1,46 @@
 import CiCommands.{ ciBuild, devBuild }
-import com.jsuereth.sbtpgp.PgpKeys.gpgCommand
+import xerial.sbt.Sonatype.autoImport.sonatypeCredentialHost
 
-organization := "io.vangogiel"
-name := "halselhof"
-version := "0.4"
+scalaVersion := "2.13.6"
+crossScalaVersions := Seq("2.12.10", "2.13.6")
 
-scalaVersion := "2.12.10"
-crossScalaVersions := Seq("2.11.8", "2.12.10")
+inThisBuild(
+  List(
+    organization := "io.vangogiel",
+    homepage := Some(url("http://vangogiel.io/")),
+    licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
+    developers := List(
+      Developer(
+        id = "vangogiel",
+        name = "Norbert Gogiel",
+        email = "vangogiel@hotmail.co.uk",
+        url = url("http://vangogiel.io")
+      )
+    ),
+    sonatypeCredentialHost := "s01.oss.sonatype.org",
+    sonatypeRepository := "https://s01.oss.sonatype.org/service/local",
+    sonatypeProfileName := "io.vangogiel"
+  )
+)
 
 scalacOptions ++= Seq(
   "-unchecked",
   "-deprecation",
   "-feature",
-  "-Ywarn-unused-import",
+  "-Ywarn-unused:imports",
   "-Ywarn-dead-code",
-  "-Yno-adapted-args",
-  "-Xfuture",
+  "-Xlint:adapted-args",
+  "-Xsource:2.13",
   "-Xfatal-warnings"
 )
 
 libraryDependencies ++= Seq(
-  "com.typesafe.play" %% "play-json" % "2.6.3" % "provided",
-  "com.typesafe.play" %% "play" % "2.6.3" % "provided",
+  "com.typesafe.play" %% "play-json" % "2.9.2",
+  "com.typesafe.play" %% "play" % "2.8.8",
   "org.scalatestplus.play" %% "scalatestplus-play" % "5.1.0" % "test"
 )
 
 commands ++= Seq(ciBuild, devBuild)
 
-coverageMinimum := 100
+coverageMinimumStmtTotal := 100
 coverageFailOnMinimum := true
-
-Global / gpgCommand := (baseDirectory.value / ".." / "gpg.sh").getAbsolutePath
-
-credentials += Credentials(
-  "Sonatype Nexus Repository Manager",
-  "s01.oss.sonatype.org",
-  sys.env.getOrElse("SONATYPE_NEXUS_USERNAME", ""),
-  sys.env.getOrElse("SONATYPE_NEXUS_PASSWORD", "")
-)
-
-ThisBuild / organization := "io.vangogiel.halselhof"
-ThisBuild / organizationName := "vangogiel"
-ThisBuild / organizationHomepage := Some(url("http://vangogiel.io/"))
-
-ThisBuild / scmInfo := Some(
-  ScmInfo(
-    url("https://github.com/vangogiel/halselhof"),
-    "scm:git@github.com:vangogiel/halselhof.git"
-  )
-)
-ThisBuild / developers := List(
-  Developer(
-    id = "vangogiel",
-    name = "Norbert Gogiel",
-    email = "vangogiel@hotmail.co.uk",
-    url = url("http://vangogiel.io")
-  )
-)
-
-ThisBuild / licenses := List("Apache 2" -> new URL("http://www.apache.org/licenses/LICENSE-2.0.txt"))
-ThisBuild / homepage := Some(url("https://github.com/vangogiel/halselhof"))
-ThisBuild / pomIncludeRepository := { _ =>
-  false
-}
-ThisBuild / publishTo := {
-  val nexus = "https://s01.oss.sonatype.org/"
-  if (isSnapshot.value) Some("snapshots" at nexus + "content/repositories/snapshots")
-  else Some("releases" at nexus + "service/local/staging/deploy/maven2")
-}
-ThisBuild / publishMavenStyle := true
