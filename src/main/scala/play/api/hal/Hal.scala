@@ -98,8 +98,7 @@ case class Hal(
   def withEmbedded(name: String, embeds: HalResource*): Hal =
     this.copy(embedded = Option(HalResource(HalLinks.empty, JsObject(Nil), Vector(name -> embeds.toVector))))
 
-  /**
-    * Append custom data in format of an object.
+  /** Append custom data in format of an object.
     * @param data type of custom data
     * @param writes writes for the custom object
     * @tparam A object Type
