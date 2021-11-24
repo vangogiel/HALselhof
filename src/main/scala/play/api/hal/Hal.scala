@@ -72,6 +72,7 @@ object Hal {
 
 case class Hal(
     links: Seq[HalRelation] = Seq.empty,
+    embedded: Option[HalResource] = None,
     customData: Option[HalResource] = None
 ) {
 
@@ -90,6 +91,19 @@ case class Hal(
     */
   def withRelation(rel: String, hrefs: Seq[HalHref]): Hal = this.copy(links :+ HalMultipleRelation(rel, hrefs))
 
+  /** Append a HAL resource with at least one embedded resource
+    * @param name type of the resources
+    * @param embeds resources to be embedded
+    */
+  def withEmbedded(name: String, embeds: HalResource*): Hal =
+    this.copy(embedded = Option(HalResource(HalLinks.empty, JsObject(Nil), Vector(name -> embeds.toVector))))
+
+  /**
+    * Append custom data in format of an object.
+    * @param data type of custom data
+    * @param writes writes for the custom object
+    * @tparam A object Type
+    */
   def withCustomData[A <: Object](data: A)(implicit writes: OWrites[A]): Hal = {
     this.copy(customData = Option(data.asResource))
   }
@@ -97,9 +111,14 @@ case class Hal(
   /** Builder by delegating to another function
     * @return the combination built as HalResource
     */
-  def build(): HalResource = customData match {
-    case None       => hal(JsObject(Nil), links.toVector)
-    case Some(data) => data include hal(JsObject(Nil), links.toVector)
+  def build(): HalResource = {
+    val base = hal(JsObject(Nil), links.toVector)
+    (embedded, customData) match {
+      case (Some(em), Some(cd)) => base include em include cd
+      case (Some(em), None)     => base include em
+      case (None, Some(cd))     => base include cd
+      case (None, None)         => base
+    }
   }
 
   /** Builder by delegating to another function
