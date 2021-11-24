@@ -1,7 +1,7 @@
 package play.api.hal
 
 import play.api.hal.Hal._
-import play.api.libs.json.{ JsObject, JsValue, Json, Writes }
+import play.api.libs.json.{ JsObject, JsValue, Json, OWrites, Writes }
 
 object Hal {
 
@@ -70,13 +70,10 @@ object Hal {
   }
 }
 
-object HalBuilder {
-  def apply(): Hal = Hal()
-}
-
 case class Hal(
     links: Seq[HalRelation] = Seq.empty,
-    embedded: Option[HalResource] = None
+    embedded: Option[HalResource] = None,
+    customData: Option[HalResource] = None
 ) {
 
   /** Append HAL relation to the builder
@@ -94,10 +91,34 @@ case class Hal(
     */
   def withRelation(rel: String, hrefs: Seq[HalHref]): Hal = this.copy(links :+ HalMultipleRelation(rel, hrefs))
 
+  /** Append a HAL resource with at least one embedded resource
+    * @param name type of the resources
+    * @param embeds resources to be embedded
+    */
+  def withEmbedded(name: String, embeds: HalResource*): Hal =
+    this.copy(embedded = Option(HalResource(HalLinks.empty, JsObject(Nil), Vector(name -> embeds.toVector))))
+
+  /** Append custom data in format of an object.
+    * @param data type of custom data
+    * @param writes writes for the custom object
+    * @tparam A object Type
+    */
+  def withCustomData[A <: Object](data: A)(implicit writes: OWrites[A]): Hal = {
+    this.copy(customData = Option(data.asResource))
+  }
+
   /** Builder by delegating to another function
     * @return the combination built as HalResource
     */
-  def build(): HalResource = hal(JsObject(Nil), links.toVector)
+  def build(): HalResource = {
+    val base = hal(JsObject(Nil), links.toVector)
+    (embedded, customData) match {
+      case (Some(em), Some(cd)) => base include em include cd
+      case (Some(em), None)     => base include em
+      case (None, Some(cd))     => base include cd
+      case (None, None)         => base
+    }
+  }
 
   /** Builder by delegating to another function
     * @return the combination built as JsValue
